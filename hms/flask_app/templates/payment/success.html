@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <div class="alert alert-success">
+        <h2>Payment Successful!</h2>
+        <p>Your booking (ID: {{ booking.id }}) is now confirmed.</p>
+        <p>We've sent a confirmation email to {{ booking.user.email }}.</p>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

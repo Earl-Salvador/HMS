@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Reports & Analytics</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item active">Insights and statistics</li>
+    </ol>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-calendar-alt me-1"></i>
+            Filter by Date Range
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-auto">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date">
+                </div>
+                <div class="col-auto">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date">
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-primary" id="applyFilter">Apply</button>
+                    <button type="button" class="btn btn-secondary" id="resetFilter">Reset</button>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-success" id="refreshData">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Total Bookings</div>
+                            <div class="display-6" id="totalBookings">-</div>
+                        </div>
+                        <i class="fas fa-calendar-check fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Total Revenue</div>
+                            <div class="display-6" id="totalRevenue">-</div>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6">
+            <div class="card bg-info text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Average Booking Value</div>
+                            <div class="display-6" id="avgBookingValue">-</div>
+                        </div>
+                        <i class="fas fa-chart-line fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Revenue by Room
+                </div>
+                <div class="card-body"><canvas id="revenueChart" width="100%" height="40"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-1"></i>
+                    Occupancy Rate (Last 12 Months)
+                </div>
+                <div class="card-body"><canvas id="occupancyChart" width="100%" height="40"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Trends Chart -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-1"></i>
+                    Monthly Booking Trends
+                </div>
+                <div class="card-body"><canvas id="trendsChart" width="100%" height="40"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Bookings Table -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table me-1"></i>
+            Recent Bookings
+        </div>
+        <div class="card-body">
+            <div id="recentBookingsLoader" class="text-center py-3">Loading...</div>
+            <div id="recentBookingsTable" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="bookingsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print/Export Buttons -->
+    <div class="text-center mb-4">
+        <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Print Report</button>
+    </div>
+</div>
+
+<script>
+// Helper to get query string from date inputs
+function getDateParams() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    let params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    return params;
+}
+
+// Update summary cards
+async function updateSummary() {
+    const params = getDateParams();
+    const url = '{{ url_for("reports.booking_summary") }}?' + params.toString();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        document.getElementById('totalBookings').innerText = data.total_bookings;
+        document.getElementById('totalRevenue').innerHTML = '₱' + data.total_revenue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('avgBookingValue').innerHTML = '₱' + data.average_booking_value.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    } catch (error) {
+        console.error('Error updating summary:', error);
+    }
+}
+
+// Update revenue chart
+async function updateRevenueChart() {
+    const params = getDateParams();
+    const url = '{{ url_for("analytics.revenue_data") }}?' + params.toString();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        if (window.revenueChart) window.revenueChart.destroy();
+        window.revenueChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data),
+                datasets: [{
+                    label: 'Revenue (₱)',
+                    data: Object.values(data),
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: function(value) { return '₱' + value.toLocaleString(); } }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error updating revenue chart:', error);
+    }
+}
+
+// Update occupancy chart
+async function updateOccupancyChart() {
+    const params = getDateParams();
+    const url = '{{ url_for("analytics.occupancy_data") }}?' + params.toString();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const ctx = document.getElementById('occupancyChart').getContext('2d');
+        if (window.occupancyChart) window.occupancyChart.destroy();
+        window.occupancyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Occupancy Rate (%)',
+                    data: data.values,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { callback: function(value) { return value + '%'; } }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error updating occupancy chart:', error);
+    }
+}
+
+// Update trends chart
+async function updateTrendsChart() {
+    const params = getDateParams();
+    const url = '{{ url_for("analytics.trends_data") }}?' + params.toString();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+        if (window.trendsChart) window.trendsChart.destroy();
+        window.trendsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Number of Bookings',
+                    data: data.values,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        precision: 0
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error updating trends chart:', error);
+    }
+}
+
+// Update recent bookings table
+async function updateRecentBookings() {
+    const params = getDateParams();
+    const url = '{{ url_for("dashboard.recent_bookings") }}?' + params.toString();
+    try {
+        const response = await fetch(url);
+        const bookings = await response.json();
+        const loader = document.getElementById('recentBookingsLoader');
+        const tableDiv = document.getElementById('recentBookingsTable');
+        const tbody = document.querySelector('#bookingsTable tbody');
+        tbody.innerHTML = '';
+        if (bookings.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No bookings found.</td></tr>';
+        } else {
+            bookings.forEach(b => {
+                let statusClass = '';
+                if (b.status === 'confirmed') statusClass = 'badge bg-success';
+                else if (b.status === 'pending') statusClass = 'badge bg-warning';
+                else statusClass = 'badge bg-danger';
+                const row = `<tr>
+                    <td>${b.id}</td>
+                    <td>${b.guest_name}</td>
+                    <td>${b.room_number}</td>
+                    <td>${b.check_in}</td>
+                    <td>${b.check_out}</td>
+                    <td><span class="${statusClass}">${b.status}</span></td>
+                    <td>₱${b.total_amount.toFixed(2)}</td>
+                </tr>`;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+        loader.style.display = 'none';
+        tableDiv.style.display = 'block';
+    } catch (error) {
+        document.getElementById('recentBookingsLoader').innerHTML = 'Failed to load recent bookings.';
+        console.error('Error loading recent bookings:', error);
+    }
+}
+
+// Load all data
+async function loadAllData() {
+    // Show loader on tables/cards (optional)
+    document.getElementById('totalBookings').innerText = 'Loading...';
+    document.getElementById('totalRevenue').innerHTML = 'Loading...';
+    document.getElementById('avgBookingValue').innerHTML = 'Loading...';
+    // Update all
+    await Promise.all([
+        updateSummary(),
+        updateRevenueChart(),
+        updateOccupancyChart(),
+        updateTrendsChart(),
+        updateRecentBookings()
+    ]);
+}
+
+// Event listeners
+document.getElementById('applyFilter').addEventListener('click', () => {
+    loadAllData();
+});
+document.getElementById('resetFilter').addEventListener('click', () => {
+    document.getElementById('start_date').value = '';
+    document.getElementById('end_date').value = '';
+    loadAllData();
+});
+document.getElementById('refreshData').addEventListener('click', () => {
+    loadAllData();
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    loadAllData();
+});
+</script>
+{% endblock %}

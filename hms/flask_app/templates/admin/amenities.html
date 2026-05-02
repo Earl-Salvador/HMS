@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-gradient-success text-white py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 class="mb-0 fw-bold"><i class="fas fa-concierge-bell me-2"></i> Amenities</h3>
+        <button type="button" class="btn btn-light rounded-pill" data-bs-toggle="modal" data-bs-target="#amenityModal" onclick="resetAmenityForm()">
+          <i class="fas fa-plus me-1"></i> Add Amenity
+        </button>
+      </div>
+    </div>
+    <div class="card-body p-4">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="amenitiesTable">
+          <thead class="table-light"><tr><th>Name</th><th>Icon</th><th class="text-center">Actions</th></tr></thead>
+          <tbody>
+            {% for amenity in amenities %}
+            <tr data-id="{{ amenity.id }}">
+              <td>{{ amenity.name }}</td>
+              <td><i class="fas {{ amenity.icon }} me-2"></i> {{ amenity.icon }}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-warning edit-amenity" data-id="{{ amenity.id }}"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger delete-amenity" data-id="{{ amenity.id }}"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="amenityModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-gradient-success text-white">
+        <h5 class="modal-title" id="amenityModalTitle">Add Amenity</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="amenityForm">
+          <input type="hidden" id="amenityId">
+          <div class="mb-3"><label class="form-label fw-semibold">Name</label><input type="text" class="form-control rounded-3" id="amenityName" required></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Icon (FontAwesome class)</label><input type="text" class="form-control rounded-3" id="amenityIcon" placeholder="fa-wifi"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary rounded-pill" id="saveAmenityBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function resetAmenityForm() {
+    document.getElementById('amenityForm').reset();
+    document.getElementById('amenityId').value = '';
+    document.getElementById('amenityModalTitle').innerText = 'Add Amenity';
+  }
+
+  function refreshAmenities() {
+    fetch(window.location.href)
+      .then(res => res.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        document.querySelector('#amenitiesTable tbody').innerHTML = doc.querySelector('#amenitiesTable tbody').innerHTML;
+        attachAmenityEvents();
+      });
+  }
+
+  function attachAmenityEvents() {
+    document.querySelectorAll('.edit-amenity').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        fetch(`/admin/amenities/${id}/json`)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('amenityId').value = data.id;
+            document.getElementById('amenityName').value = data.name;
+            document.getElementById('amenityIcon').value = data.icon || '';
+            document.getElementById('amenityModalTitle').innerText = 'Edit Amenity';
+            new bootstrap.Modal(document.getElementById('amenityModal')).show();
+          });
+      };
+    });
+    document.querySelectorAll('.delete-amenity').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        Swal.fire({
+          title: 'Confirm Delete',
+          text: 'This action cannot be undone.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Delete'
+        }).then(result => {
+          if (result.isConfirmed) {
+            fetch(`/admin/amenities/${id}`, { method: 'DELETE' })
+              .then(res => {
+                if (res.ok) {
+                  refreshAmenities();
+                  Swal.fire('Deleted!', 'Amenity removed.', 'success');
+                } else {
+                  Swal.fire('Error', 'Could not delete.', 'error');
+                }
+              });
+          }
+        });
+      };
+    });
+  }
+
+  document.getElementById('saveAmenityBtn').onclick = () => {
+    const id = document.getElementById('amenityId').value;
+    const data = {
+      name: document.getElementById('amenityName').value,
+      icon: document.getElementById('amenityIcon').value
+    };
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/admin/amenities/${id}` : '/admin/amenities/';
+    fetch(url, {
+      method, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (res.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('amenityModal')).hide();
+        refreshAmenities();
+        Swal.fire('Success', `Amenity ${id ? 'updated' : 'created'}`, 'success');
+      } else {
+        Swal.fire('Error', 'Operation failed', 'error');
+      }
+    });
+  };
+
+  attachAmenityEvents();
+</script>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+    <div class="card-header bg-gradient-warning text-dark py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 class="mb-0 fw-bold"><i class="fas fa-users me-2"></i> User Management</h3>
+        <button type="button" class="btn btn-dark rounded-pill" data-bs-toggle="modal" data-bs-target="#userModal" onclick="resetUserForm()">
+          <i class="fas fa-plus me-1"></i> Add User
+        </button>
+      </div>
+    </div>
+    <div class="card-body p-4">
+      <div class="alert alert-info rounded-3">
+        <i class="fas fa-info-circle me-2"></i> You cannot block your own account or other admin accounts. Blocked users cannot log in.
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="usersTable">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Blocked</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr data-id="{{ user.id }}">
+              <td>{{ user.id }}</td>
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phone or '-' }}</td>
+              <td>
+                {% if user.role == 'admin' %}
+                  <span class="badge bg-danger">Admin</span>
+                {% elif user.role == 'staff' %}
+                  <span class="badge bg-warning">Staff</span>
+                {% else %}
+                  <span class="badge bg-success">Guest</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if user.is_blocked %}
+                  <span class="badge bg-danger">Blocked</span>
+                {% else %}
+                  <span class="badge bg-success">Active</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-warning edit-user" data-id="{{ user.id }}" title="Edit"><i class="fas fa-edit"></i></button>
+                {% if user.role != 'admin' and user.id != current_user.id %}
+                  {% if user.is_blocked %}
+                    <form action="{{ url_for('users.unblock_user', id=user.id) }}" method="POST" style="display:inline;" class="block-form">
+                      <button type="submit" class="btn btn-sm btn-success" title="Unblock"><i class="fas fa-check-circle"></i> Unblock</button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('users.block_user', id=user.id) }}" method="POST" style="display:inline;" class="block-form">
+                      <button type="submit" class="btn btn-sm btn-warning" title="Block"><i class="fas fa-ban"></i> Block</button>
+                    </form>
+                  {% endif %}
+                {% else %}
+                  <button class="btn btn-sm btn-secondary" disabled title="Cannot block this user"><i class="fas fa-ban"></i> Block</button>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit User Modal (unchanged) -->
+<div class="modal fade" id="userModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-gradient-warning text-dark">
+        <h5 class="modal-title" id="userModalTitle">Add User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="userForm">
+          <input type="hidden" id="userId">
+          <div class="mb-3"><label class="form-label fw-semibold">Full Name</label><input type="text" class="form-control rounded-3" id="userName" required></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Email</label><input type="email" class="form-control rounded-3" id="userEmail" required></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Password</label><input type="password" class="form-control rounded-3" id="userPassword" placeholder="Leave blank to keep unchanged (edit)"></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Phone</label><input type="text" class="form-control rounded-3" id="userPhone"></div>
+          <div class="mb-3"><label class="form-label fw-semibold">Role</label>
+            <select class="form-select rounded-3" id="userRole">
+              <option value="guest">Guest</option>
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary rounded-pill" id="saveUserBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function resetUserForm() {
+    document.getElementById('userForm').reset();
+    document.getElementById('userId').value = '';
+    document.getElementById('userPassword').required = true;
+    document.getElementById('userModalTitle').innerText = 'Add User';
+  }
+
+  function refreshUsers() {
+    location.reload(); // simplest way to reflect block/unblock changes
+  }
+
+  function attachUserEvents() {
+    // Edit user
+    document.querySelectorAll('.edit-user').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        fetch(`/admin/users/${id}/json`)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('userId').value = data.id;
+            document.getElementById('userName').value = data.name;
+            document.getElementById('userEmail').value = data.email;
+            document.getElementById('userPhone').value = data.phone || '';
+            document.getElementById('userRole').value = data.role;
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userPassword').required = false;
+            document.getElementById('userModalTitle').innerText = 'Edit User';
+            new bootstrap.Modal(document.getElementById('userModal')).show();
+          });
+      };
+    });
+
+    // Block/Unblock forms – add confirmation before submission
+    document.querySelectorAll('.block-form').forEach(form => {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const action = form.querySelector('button').innerText.includes('Unblock') ? 'unblock' : 'block';
+        Swal.fire({
+          title: `Confirm ${action}`,
+          text: `Are you sure you want to ${action} this user?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: `Yes, ${action}`,
+          cancelButtonText: 'Cancel'
+        }).then(result => {
+          if (result.isConfirmed) {
+            form.submit();
+          }
+        });
+      };
+    });
+  }
+
+  // Save user (create or update) – unchanged
+  document.getElementById('saveUserBtn').onclick = () => {
+    const id = document.getElementById('userId').value;
+    const data = {
+      name: document.getElementById('userName').value,
+      email: document.getElementById('userEmail').value,
+      phone: document.getElementById('userPhone').value,
+      role: document.getElementById('userRole').value
+    };
+    const password = document.getElementById('userPassword').value;
+    if (password) data.password = password;
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/admin/users/${id}` : '/admin/users/';
+    fetch(url, {
+      method, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(res => {
+      if (res.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+        refreshUsers();
+        Swal.fire('Success', `User ${id ? 'updated' : 'created'}`, 'success');
+      } else {
+        Swal.fire('Error', 'Operation failed', 'error');
+      }
+    });
+  };
+
+  attachUserEvents();
+</script>
+{% endblock %}
