@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Admin Dashboard</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item active">Welcome back, {{ current_user.name }}!</li>
+    </ol>
+    
+    <!-- Stats Cards (including Pending Bookings) -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Total Users</div>
+                            <div class="display-6" id="totalUsers">-</div>
+                        </div>
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('users.list_users') }}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Total Rooms</div>
+                            <div class="display-6" id="totalRooms">-</div>
+                        </div>
+                        <i class="fas fa-bed fa-3x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('rooms.list_room_types') }}">Manage Rooms</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Confirmed Bookings</div>
+                            <div class="display-6" id="totalBookings">-</div>
+                        </div>
+                        <i class="fas fa-calendar-check fa-3x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('reports.index') }}">View Reports</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Total Revenue</div>
+                            <div class="display-6" id="totalRevenue">-</div>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-3x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('reports.index') }}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Bookings Alert Card -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <i class="fas fa-clock me-2"></i> Pending Bookings (Awaiting Verification)
+                </div>
+                <div class="card-body" id="pendingBookingsContainer">
+                    <p class="text-muted">Loading pending bookings...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-1"></i>
+                    Monthly Revenue (Last 12 Months)
+                </div>
+                <div class="card-body"><canvas id="revenueChart" width="100%" height="40"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Occupancy Rate (Last 12 Months)
+                </div>
+                <div class="card-body"><canvas id="occupancyChart" width="100%" height="40"></canvas></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-light mb-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-door-open fa-3x text-primary"></i>
+                    <h5 class="card-title mt-2">Room Types</h5>
+                    <p class="card-text">Manage room categories, pricing, and capacity.</p>
+                    <a href="{{ url_for('rooms.list_room_types') }}" class="btn btn-primary btn-sm">Go</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-light mb-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-swimming-pool fa-3x text-success"></i>
+                    <h5 class="card-title mt-2">Amenities</h5>
+                    <p class="card-text">Add or remove hotel facilities.</p>
+                    <a href="{{ url_for('amenities.list_amenities') }}" class="btn btn-success btn-sm">Go</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-light mb-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-info"></i>
+                    <h5 class="card-title mt-2">User Management</h5>
+                    <p class="card-text">View, edit, and delete users.</p>
+                    <a href="{{ url_for('users.list_users') }}" class="btn btn-info btn-sm">Go</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-light mb-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-comment-dots fa-3x text-warning"></i>
+                    <h5 class="card-title mt-2">Comments</h5>
+                    <p class="card-text">Moderate user feedback.</p>
+                    <a href="{{ url_for('comments.list_comments') }}" class="btn btn-warning btn-sm">Go</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Bookings Table -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table me-1"></i>
+            Recent Bookings (All)
+        </div>
+        <div class="card-body">
+            <div id="recentBookingsLoader" class="text-center py-3">Loading...</div>
+            <div id="recentBookingsTable" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="bookingsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch admin stats (users, rooms, confirmed bookings, revenue)
+    fetch('{{ url_for("dashboard.admin_stats") }}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalUsers').innerText = data.total_users;
+            document.getElementById('totalRooms').innerText = data.total_rooms;
+            document.getElementById('totalBookings').innerText = data.total_bookings;
+            document.getElementById('totalRevenue').innerHTML = '₱' + data.total_revenue.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        })
+        .catch(error => console.error('Error loading stats:', error));
+    
+    // Fetch pending bookings and display them
+    fetch('/booking/pending-list')
+        .then(response => response.json())
+        .then(bookings => {
+            const container = document.getElementById('pendingBookingsContainer');
+            if (bookings.length === 0) {
+                container.innerHTML = '<p class="text-muted mb-0">No pending bookings at the moment.</p>';
+                return;
+            }
+            let html = '<div class="table-responsive"><table class="table table-sm table-bordered">';
+            html += '<thead><tr><th>ID</th><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Amount</th><th>Payment</th><th>Actions</th></tr></thead><tbody>';
+            bookings.forEach(b => {
+                const paymentBadge = b.payment_status === 'completed' ? '<span class="badge bg-success">Paid</span>' : '<span class="badge bg-warning">Pending</span>';
+                html += `<td>
+                    <td>${b.id}</td>
+                    <td>${b.user}</td>
+                    <td>${b.room}</td>
+                    <td>${b.check_in}</td>
+                    <td>${b.check_out}</td>
+                    <td>₱${b.total.toFixed(2)}</td>
+                    <td>${paymentBadge}</td>
+                    <td>
+                        <a href="/booking/verify" class="btn btn-sm btn-primary">Verify</a>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading pending bookings:', error);
+            document.getElementById('pendingBookingsContainer').innerHTML = '<p class="text-danger">Error loading pending bookings.</p>';
+        });
+
+    // Monthly revenue chart
+    fetch('{{ url_for("analytics.revenue_data") }}')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        label: 'Revenue (₱)',
+                        data: Object.values(data),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: function(value) { return '₱' + value.toLocaleString(); } }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading revenue data:', error));
+    
+    // Occupancy chart
+    fetch('{{ url_for("analytics.occupancy_data") }}')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('occupancyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Occupancy Rate (%)',
+                        data: data.values,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: function(value) { return value + '%'; } }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading occupancy data:', error));
+    
+    // Recent bookings (all statuses)
+    fetch('{{ url_for("dashboard.recent_bookings") }}')  // expects to return all recent bookings
+        .then(response => response.json())
+        .then(bookings => {
+            document.getElementById('recentBookingsLoader').style.display = 'none';
+            const tableBody = document.querySelector('#bookingsTable tbody');
+            tableBody.innerHTML = '';
+            if (bookings.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No bookings found.</td></tr>';
+            } else {
+                bookings.forEach(b => {
+                    let statusClass = '';
+                    let statusText = b.status;
+                    if (b.status === 'confirmed') statusClass = 'badge bg-success';
+                    else if (b.status === 'pending') statusClass = 'badge bg-warning';
+                    else if (b.status === 'cancelled') statusClass = 'badge bg-danger';
+                    else statusClass = 'badge bg-secondary';
+                    
+                    const row = `<tr>
+                        <td>${b.id}</td>
+                        <td>${b.guest_name}</td>
+                        <td>${b.room_number}</td>
+                        <td>${b.check_in}</td>
+                        <td>${b.check_out}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td>₱${b.total_amount.toFixed(2)}</td>
+                    </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+            document.getElementById('recentBookingsTable').style.display = 'block';
+        })
+        .catch(error => {
+            document.getElementById('recentBookingsLoader').innerHTML = 'Failed to load recent bookings.';
+            console.error('Error loading recent bookings:', error);
+        });
+});
+</script>
+{% endblock %}

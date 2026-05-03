@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow border-0 rounded-4">
+        <div class="card-header bg-primary text-white">
+            <h3><i class="fas fa-file-invoice"></i> Booking Receipt</h3>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-sm-6">
+                    <h5>Receipt #: {{ receipt.receipt_number }}</h5>
+                    <p>Date: {{ receipt.generated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+                <div class="col-sm-6 text-end">
+                    <h5>Booking ID: {{ booking.id }}</h5>
+                </div>
+            </div>
+            <h5>Guest Details</h5>
+            <p><strong>Name:</strong> {{ booking.user.name }}<br>
+               <strong>Email:</strong> {{ booking.user.email }}</p>
+
+            <h5>Room Details</h5>
+            <table class="table table-bordered">
+                <tr><th>Room Number</th><td>{{ booking.room.room_number }}</td></tr>
+                <tr><th>Room Type</th><td>{{ booking.room.room_type.name }}</td></tr>
+                <tr><th>Check-in</th><td>{{ booking.check_in }}</td></tr>
+                <tr><th>Check-out</th><td>{{ booking.check_out }}</td></tr>
+                <tr><th>Nights</th><td>{{ booking.total_nights }}</td></tr>
+                <tr><th>Price per night</th><td>₱{{ "%.2f"|format(booking.room.room_type.base_price) }}</td></tr>
+                <tr><th>Total Amount</th><td class="fw-bold">₱{{ "%.2f"|format(booking.total_amount) }}</td></tr>
+            </table>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Print / Save as PDF</button>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

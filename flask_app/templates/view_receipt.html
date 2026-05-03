@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h3>Booking Receipt</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Receipt Number:</strong> {{ receipt.receipt_number }}</p>
+            <p><strong>Booking ID:</strong> {{ booking.id }}</p>
+            <p><strong>Guest:</strong> {{ booking.user.name }}</p>
+            <p><strong>Room:</strong> {{ booking.room.room_number }} ({{ booking.room.room_type.name }})</p>
+            <p><strong>Check-in:</strong> {{ booking.check_in }}</p>
+            <p><strong>Check-out:</strong> {{ booking.check_out }}</p>
+            <p><strong>Nights:</strong> {{ booking.total_nights }}</p>
+            <p><strong>Total Amount:</strong> ₱{{ "%.2f"|format(booking.total_amount) }}</p>
+            <p><strong>Generated on:</strong> {{ receipt.generated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            <a href="{{ receipt.pdf_path }}" class="btn btn-primary" target="_blank">Download PDF</a>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}  

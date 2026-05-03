@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Occupancy Rate Dashboard</h2>
+<canvas id="occupancyChart" width="400" height="200"></canvas>
+
+<script>
+fetch('{{ url_for("analytics.occupancy_data") }}')
+    .then(response => response.json())
+    .then(data => {
+        const ctx = document.getElementById('occupancyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Occupancy Rate (%)',
+                    data: data.values,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
