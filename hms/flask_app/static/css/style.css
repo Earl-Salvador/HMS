@@ -1,0 +1,260 @@
+/* JAM & EARL - Professional Executive SaaS Theme 
+   Colors: #133215 (Green), #92B775 (Lime), #F3E8D3 (Beige)
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --sidebar-green: #133215;
+    --lime-accent: #92B775;
+    --lime-hover: #7fa364;
+    --beige-main: #F3E8D3;
+    --white-card: #FFFFFF;
+    --text-muted: #6c757d;
+}
+
+/* 1. Global Layout & Typography */
+html, body {
+    height: 100%;
+}
+
+body {
+    background-color: var(--beige-main) !important;
+    color: var(--sidebar-green);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+}
+
+main {
+    flex: 1 0 auto; /* Pushes footer to bottom */
+}
+
+/* 2. Custom Navigation */
+.navbar-custom {
+    background-color: var(--sidebar-green) !important;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(146, 183, 117, 0.1);
+}
+
+.navbar-custom .navbar-brand {
+    color: var(--white-card) !important;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+}
+
+.navbar-custom .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600;
+    transition: 0.3s;
+    font-size: 0.9rem;
+}
+
+.navbar-custom .nav-link:hover, 
+.navbar-custom .nav-link.active {
+    color: var(--lime-accent) !important;
+}
+
+/* 3. Hero Section & Gradient Headline */
+.hero-bg {
+    background: linear-gradient(rgba(19, 50, 21, 0.85), rgba(19, 50, 21, 0.85)), 
+                url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    padding: 120px 0;
+    color: var(--white-card);
+}
+
+.text-gradient-lime {
+    background: linear-gradient(to right, #92B775, #D4E9C0, #92B775);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+/* 4. Professional Buttons */
+.btn-custom-go {
+    background-color: var(--lime-accent) !important;
+    color: var(--sidebar-green) !important;
+    border: none !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 8px;
+    padding: 12px 25px;
+    transition: 0.3s;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 12px rgba(146, 183, 117, 0.2);
+}
+
+.btn-custom-go:hover {
+    background-color: var(--lime-hover) !important;
+    transform: translateY(-2px);
+    color: var(--sidebar-green) !important;
+}
+
+.btn-outline-white {
+    border: 2px solid #FFFFFF;
+    color: #FFFFFF;
+    border-radius: 8px;
+    padding: 12px 25px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.btn-outline-white:hover {
+    background: #FFFFFF;
+    color: var(--sidebar-green);
+}
+
+/* 5. Feature & Dashboard Cards */
+.feature-card {
+    background-color: var(--white-card) !important;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(19, 50, 21, 0.08);
+    height: 100%;
+    transition: 0.4s;
+    border: 1px solid rgba(19, 50, 21, 0.05);
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(19, 50, 21, 0.12);
+}
+
+.feature-icon-box {
+    width: 60px;
+    height: 60px;
+    background: var(--beige-main);
+    color: var(--sidebar-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+/* 6. Management Tables */
+.table-custom {
+    background-color: var(--white-card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.table thead th {
+    background-color: #f8f9fa;
+    color: var(--sidebar-green);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    padding: 15px;
+    border-bottom: 2px solid var(--beige-main);
+}
+
+.table tbody td {
+    padding: 15px;
+    vertical-align: middle;
+    color: #444;
+    border-bottom: 1px solid #eee;
+}
+
+/* 7. Professional SweetAlert Box (Swal) */
+.jam-earl-swal-popup {
+    border-radius: 12px !important;
+    padding: 2.5rem !important;
+    border: 1px solid rgba(19, 50, 21, 0.1) !important;
+    box-shadow: 0 20px 40px rgba(19, 50, 21, 0.15) !important;
+}
+
+.jam-earl-swal-title {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    color: var(--sidebar-green) !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.jam-earl-swal-text {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1rem !important;
+    color: var(--text-muted) !important;
+    line-height: 1.6 !important;
+}
+
+.jam-earl-confirm {
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    padding: 12px 30px !important;
+    text-transform: uppercase;
+    font-size: 0.85rem !important;
+    letter-spacing: 0.8px;
+    transition: 0.3s !important;
+}
+
+.jam-earl-cancel {
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    padding: 12px 30px !important;
+    text-transform: uppercase;
+    font-size: 0.85rem !important;
+    background-color: transparent !important;
+    color: var(--text-muted) !important;
+    border: 1px solid #dee2e6 !important;
+    transition: 0.3s !important;
+}
+
+.jam-earl-cancel:hover {
+    background-color: #f8f9fa !important;
+    color: var(--sidebar-green) !important;
+}
+
+/* 8. Utilities */
+.brand-dot {
+    color: var(--lime-accent);
+}
+
+.text-success { color: var(--lime-accent) !important; }
+.bg-sidebar { background-color: var(--sidebar-green) !important; }
+.rounded-xl { border-radius: 20px !important; }
+
+/* Animation Overrides */
+.animate__faster {
+    --animate-duration: 0.4s !important;
+}
+
+
+.fc-event {
+    cursor: pointer;
+}
+.fc-event-title {
+    font-weight: bold;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #198754, #198754);
+}
+.bg-gradient-success {
+    background: linear-gradient(135deg, #198754, #157347);
+}
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #198754, #198754);
+}
+.rounded-4 {
+    border-radius: 1rem !important;
+}
+.rounded-3 {
+    border-radius: 0.75rem !important;
+}
+.rounded-pill {
+    border-radius: 50rem !important;
+}

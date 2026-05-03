@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Monthly Booking Trends</h2>
+<canvas id="trendsChart" width="400" height="200"></canvas>
+
+<script>
+fetch('{{ url_for("analytics.trends_data") }}')
+    .then(response => response.json())
+    .then(data => {
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Bookings Count',
+                    data: data.values,
+                    borderColor: 'rgb(255, 99, 132)',
+                    tension: 0.1,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        precision: 0
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
